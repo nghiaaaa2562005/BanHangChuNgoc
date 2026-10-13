@@ -13,6 +13,13 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        // Khởi tạo cơ sở dữ liệu SQLite ngay khi mở app
+        _ = Task.Run(async () =>
+        {
+            var db = new Services.DatabaseService();
+            await db.EnsureDatabaseCreatedAsync();
+        });
+
         // Tự động bôi đen tất cả ký tự khi click chuột hoặc focus vào bất kỳ ô TextBox nào
         EventManager.RegisterClassHandler(
             typeof(TextBox),

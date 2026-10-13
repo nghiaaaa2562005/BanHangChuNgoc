@@ -7,16 +7,19 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using BanHangChuNgoc.Models;
 using BanHangChuNgoc.Services;
+using BanHangChuNgoc;
 
 namespace BanHangChuNgoc.ViewModels
 {
     public partial class MainViewModel : ObservableObject
     {
         private readonly DatabaseService _dbService;
+        private readonly ExcelExportService _excelExportService;
 
         public MainViewModel()
         {
             _dbService = new DatabaseService();
+            _excelExportService = new ExcelExportService();
 
             // Khởi tạo danh sách Tháng
             DanhSachThang.Add("Tất cả");
@@ -24,7 +27,8 @@ namespace BanHangChuNgoc.ViewModels
             {
                 DanhSachThang.Add($"Tháng {m}");
             }
-            SelectedThang = "Tất cả";
+            SelectedTuThang = "Tất cả";
+            SelectedDenThang = "Tất cả";
 
             // Khởi tạo danh sách Năm
             DanhSachNam.Add("Tất cả");
@@ -294,13 +298,23 @@ namespace BanHangChuNgoc.ViewModels
         {
             if (banLe == null || SelectedBaoHang == null) return;
 
-            var confirm = MessageBox.Show($"Bạn có chắc muốn xóa lượt bán {banLe.SoLuong} cái giá {banLe.DonGia:N0} k này?", "Xác nhận xóa", MessageBoxButton.YesNo, MessageBoxImage.Question);
-            if (confirm == MessageBoxResult.Yes)
+            string thongTin = $"Lượt bán {banLe.SoLuong} cái - Đơn giá: {banLe.DonGia:N0} k ({banLe.NgayBanFormatted}) của bao '{SelectedBaoHang.TenBao}'";
+            if (!XacNhanXoaWindow.XacNhan(thongTin))
+            {
+                return;
+            }
+
+            try
             {
                 await _dbService.XoaBanLeAsync(banLe.MaBanLe);
                 await TaiDanhSachBanLeAsync(SelectedBaoHang.MaBao);
                 CapNhatThongTinTienDoBao(SelectedBaoHang);
                 await TaiBaoCaoThongKeAsync();
+                MessageBox.Show("Đã xóa lượt bán lẻ thành công!", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi xóa: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -382,12 +396,22 @@ namespace BanHangChuNgoc.ViewModels
 
             if (maBao == 0) return;
 
-            var confirm = MessageBox.Show($"Bạn có chắc chắn muốn xóa bao '{tenBao}' cùng toàn bộ dữ liệu bán lẻ của bao này không?", "Cảnh báo xóa bao", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-            if (confirm == MessageBoxResult.Yes)
+            string thongTin = $"Bao hàng '{tenBao}' (Mã #{maBao}) và toàn bộ dữ liệu bán lẻ liên quan";
+            if (!XacNhanXoaWindow.XacNhan(thongTin))
+            {
+                return;
+            }
+
+            try
             {
                 await _dbService.XoaBaoHangAsync(maBao);
                 await TaiDanhSachBaoHangAsync();
                 await TaiBaoCaoThongKeAsync();
+                MessageBox.Show($"Đã xóa bao hàng '{tenBao}' thành công!", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi xóa: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -420,7 +444,10 @@ namespace BanHangChuNgoc.ViewModels
         private ObservableCollection<string> _danhSachThang = new();
 
         [ObservableProperty]
-        private string _selectedThang = "Tất cả";
+        private string _selectedTuThang = "Tất cả";
+
+        [ObservableProperty]
+        private string _selectedDenThang = "Tất cả";
 
         [ObservableProperty]
         private ObservableCollection<string> _danhSachNam = new();
@@ -437,9 +464,200 @@ namespace BanHangChuNgoc.ViewModels
         [RelayCommand]
         private async Task XoaBoLocBaoCaoAsync()
         {
-            SelectedThang = "Tất cả";
+            SelectedTuThang = "Tất cả";
+            SelectedDenThang = "Tất cả";
             SelectedNam = "Tất cả";
             await TaiBaoCaoThongKeAsync();
+        }
+
+        [RelayCommand]
+        private void XuatExcel()
+        {
+            if (DanhSachThongKe == null || DanhSachThongKe.Count == 0)
+            {
+                MessageBox.Show("Hiện không có dữ liệu báo cáo nào để xuất file Excel!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            var saveFileDialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Title = "Xuất báo cáo thống kê doanh thu",
+                Filter = "Tệp Excel (*.xlsx)|*.xlsx",
+                FileName = "thống kê vè  doanh thu.xlsx"
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    string thoiGianLoc = "";
+                    if (SelectedTuThang == "Tất cả" && SelectedDenThang == "Tất cả")
+                    {
+                        thoiGianLoc = "Cả năm";
+                    }
+                    else if (SelectedTuThang == SelectedDenThang)
+                    {
+                        thoiGianLoc = SelectedTuThang;
+                    }
+                    else
+                    {
+                        thoiGianLoc = $"Từ {SelectedTuThang} đến {SelectedDenThang}";
+                    }
+
+                    if (SelectedNam != "Tất cả")
+                    {
+                        thoiGianLoc += $" - Năm {SelectedNam}";
+                    }
+                    else
+                    {
+                        thoiGianLoc += " - Tất cả các năm";
+                    }
+
+                    _excelExportService.ExportThongKeDoanhThu(
+                        saveFileDialog.FileName,
+                        DanhSachThongKe,
+                        thoiGianLoc,
+                        TongBaoCaoTienNhap,
+                        TongBaoCaoTienBanLe,
+                        TongBaoCaoTienBanThua,
+                        TongBaoCaoDoanhThu,
+                        TongBaoCaoLoiNhuan,
+                        TongBaoCaoAoBanLe
+                    );
+
+                    var result = MessageBox.Show(
+                        $"Xuất file Excel thành công!\n\nĐường dẫn: {saveFileDialog.FileName}\n\nBạn có muốn mở file ngay không?",
+                        "Thành công",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Information);
+
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = saveFileDialog.FileName,
+                            UseShellExecute = true
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Lỗi khi xuất file Excel: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        [RelayCommand]
+        private async Task XoaDuLieuDaLocAsync()
+        {
+            if (DanhSachThongKe == null || DanhSachThongKe.Count == 0)
+            {
+                MessageBox.Show("Hiện không có dữ liệu báo cáo nào trong danh sách đã lọc để xóa!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            string thoiGianLoc = "";
+            if (SelectedTuThang == "Tất cả" && SelectedDenThang == "Tất cả")
+            {
+                thoiGianLoc = "Cả năm";
+            }
+            else if (SelectedTuThang == SelectedDenThang)
+            {
+                thoiGianLoc = SelectedTuThang;
+            }
+            else
+            {
+                thoiGianLoc = $"Từ {SelectedTuThang} đến {SelectedDenThang}";
+            }
+
+            if (SelectedNam != "Tất cả")
+            {
+                thoiGianLoc += $" - Năm {SelectedNam}";
+            }
+            else
+            {
+                thoiGianLoc += " - Tất cả các năm";
+            }
+
+            string thongTinXoa = $"{DanhSachThongKe.Count} bao hàng và toàn bộ lượt bán lẻ liên quan [{thoiGianLoc}]";
+
+            bool xacNhan = XacNhanXoaWindow.XacNhan(thongTinXoa, choPhepXuatExcel: true, out bool coXuatExcel);
+            if (!xacNhan)
+            {
+                return;
+            }
+
+            // Nếu người dùng chọn lưu/xuất file Excel trước khi xóa
+            if (coXuatExcel)
+            {
+                var saveFileDialog = new Microsoft.Win32.SaveFileDialog
+                {
+                    Title = "Lưu bản sao lưu trước khi xóa dữ liệu",
+                    Filter = "Tệp Excel (*.xlsx)|*.xlsx",
+                    FileName = "thống kê vè  doanh thu.xlsx"
+                };
+
+                if (saveFileDialog.ShowDialog() == true)
+                {
+                    try
+                    {
+                        _excelExportService.ExportThongKeDoanhThu(
+                            saveFileDialog.FileName,
+                            DanhSachThongKe,
+                            thoiGianLoc,
+                            TongBaoCaoTienNhap,
+                            TongBaoCaoTienBanLe,
+                            TongBaoCaoTienBanThua,
+                            TongBaoCaoDoanhThu,
+                            TongBaoCaoLoiNhuan,
+                            TongBaoCaoAoBanLe
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        var traLoi = MessageBox.Show(
+                            $"Xuất file Excel trước khi xóa thất bại: {ex.Message}\n\nBạn có muốn tiếp tục xóa dữ liệu không?",
+                            "Cảnh báo xuất Excel",
+                            MessageBoxButton.YesNo,
+                            MessageBoxImage.Warning);
+
+                        if (traLoi != MessageBoxResult.Yes)
+                        {
+                            return;
+                        }
+                    }
+                }
+                else
+                {
+                    // Người dùng đã hủy hộp thoại lưu file Excel
+                    var traLoi = MessageBox.Show(
+                        "Bạn đã hủy lưu file Excel dự phòng. Bạn có chắc chắn vẫn muốn xóa dữ liệu này khỏi hệ thống không?",
+                        "Xác nhận xóa",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Question);
+
+                    if (traLoi != MessageBoxResult.Yes)
+                    {
+                        return;
+                    }
+                }
+            }
+
+            // Thực hiện xóa dữ liệu trong database
+            try
+            {
+                var maBaoList = DanhSachThongKe.Select(x => x.MaBao).ToList();
+                await _dbService.XoaDanhSachBaoHangAsync(maBaoList);
+
+                await TaiDanhSachBaoHangAsync();
+                await TaiBaoCaoThongKeAsync();
+
+                MessageBox.Show($"Đã xóa thành công {maBaoList.Count} bao hàng và các dữ liệu liên quan khỏi hệ thống!", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi xóa dữ liệu: {ex.Message}", "Lỗi CSDL", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         // ==========================================
@@ -450,7 +668,7 @@ namespace BanHangChuNgoc.ViewModels
         {
             try
             {
-                var list = await _dbService.GetDanhSachBaoHangAsync();
+                var list = await _dbService.GetDanhSachBaoHangAsync("Đang bán");
                 DanhSachBaoHang.Clear();
                 foreach (var item in list)
                 {
@@ -494,14 +712,29 @@ namespace BanHangChuNgoc.ViewModels
         {
             try
             {
-                int? thang = null;
-                if (!string.IsNullOrEmpty(SelectedThang) && SelectedThang != "Tất cả")
+                int? tuThang = null;
+                if (!string.IsNullOrEmpty(SelectedTuThang) && SelectedTuThang != "Tất cả")
                 {
-                    string rawThang = SelectedThang.Replace("Tháng", "").Trim();
-                    if (int.TryParse(rawThang, out int t))
+                    string rawTuThang = SelectedTuThang.Replace("Tháng", "").Trim();
+                    if (int.TryParse(rawTuThang, out int t))
                     {
-                        thang = t;
+                        tuThang = t;
                     }
+                }
+
+                int? denThang = null;
+                if (!string.IsNullOrEmpty(SelectedDenThang) && SelectedDenThang != "Tất cả")
+                {
+                    string rawDenThang = SelectedDenThang.Replace("Tháng", "").Trim();
+                    if (int.TryParse(rawDenThang, out int d))
+                    {
+                        denThang = d;
+                    }
+                }
+
+                if (tuThang.HasValue && denThang.HasValue && tuThang.Value > denThang.Value)
+                {
+                    (tuThang, denThang) = (denThang, tuThang);
                 }
 
                 int? nam = null;
@@ -513,14 +746,15 @@ namespace BanHangChuNgoc.ViewModels
                     }
                 }
 
-                var list = await _dbService.GetThongKeTatCaBaoAsync(thang, nam);
+                var list = await _dbService.GetThongKeTatCaBaoAsync(tuThang, denThang, nam);
                 DanhSachThongKe.Clear();
                 foreach (var item in list)
                 {
                     DanhSachThongKe.Add(item);
                 }
 
-                TongBaoCaoTienNhap = list.Sum(x => x.TienNhap);
+                // Tổng vốn bỏ ra chỉ tính những bao vẫn còn trong trạng thái 'Đang bán'
+                TongBaoCaoTienNhap = list.Where(x => x.TrangThai == "Đang bán").Sum(x => x.TienNhap);
                 TongBaoCaoTienBanLe = list.Sum(x => x.TongTienBanLe);
                 TongBaoCaoTienBanThua = list.Sum(x => x.TienBanThua);
                 TongBaoCaoDoanhThu = list.Sum(x => x.TongThu);

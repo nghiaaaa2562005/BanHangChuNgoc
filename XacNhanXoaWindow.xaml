@@ -1,0 +1,83 @@
+<Window x:Class="BanHangChuNgoc.XacNhanXoaWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Xác Nhận Xóa - Bán Hàng Chú Ngọc"
+        SizeToContent="Height" MinHeight="470" Width="440"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="#F1F5F9"
+        FontFamily="Segoe UI, Helvetica, Arial">
+
+    <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+        <Border Width="390" Background="White" CornerRadius="12" Padding="24,24" Margin="0,16">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="20" ShadowDepth="4" Opacity="0.1" Direction="270"/>
+            </Border.Effect>
+
+            <StackPanel>
+                <!-- Tiêu đề & Cảnh báo -->
+                <TextBlock Text="🔒 XÁC MINH QUYỀN XÓA" 
+                           FontSize="18" FontWeight="Bold" Foreground="#DC2626" 
+                           HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                <TextBlock Text="Thao tác này sẽ xóa vĩnh viễn dữ liệu khỏi hệ thống." 
+                           FontSize="12" Foreground="#64748B" 
+                           HorizontalAlignment="Center" Margin="0,0,0,14"/>
+
+                <!-- Thông tin mục cần xóa -->
+                <Border Background="#FEF2F2" BorderBrush="#FECACA" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,0,0,16">
+                    <StackPanel>
+                        <TextBlock Text="Mục sẽ xóa:" FontSize="11" FontWeight="Bold" Foreground="#991B1B" Margin="0,0,0,3"/>
+                        <TextBlock x:Name="lblThongTinXoa" Text="Bao hàng hoặc lượt bán lẻ" 
+                                   FontSize="13" FontWeight="SemiBold" Foreground="#7F1D1D" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Form nhập tài khoản & mật khẩu -->
+                <TextBlock Text="Tài khoản:" FontWeight="SemiBold" FontSize="13" Foreground="#334155" Margin="0,0,0,4"/>
+                <TextBox x:Name="txtTaiKhoan" Style="{StaticResource ModernTextBox}" Height="36" 
+                         FontSize="14" VerticalContentAlignment="Center" Margin="0,0,0,12"
+                         KeyDown="TxtTaiKhoan_KeyDown"/>
+
+                <TextBlock Text="Mật khẩu:" FontWeight="SemiBold" FontSize="13" Foreground="#334155" Margin="0,0,0,4"/>
+                <PasswordBox x:Name="txtMatKhau" Height="36" FontSize="14" VerticalContentAlignment="Center" 
+                             Padding="8,6" Margin="0,0,0,12"
+                             KeyDown="TxtMatKhau_KeyDown"/>
+
+                <!-- Tùy chọn lưu file Excel trước khi xóa -->
+                <Border x:Name="borderTuyChonExcel" Background="#F0FDF4" BorderBrush="#BBF7D0" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,0,0,12" Visibility="Collapsed">
+                    <CheckBox x:Name="chkXuatExcel" 
+                              Content="Lưu / Xuất dữ liệu ra Excel trước khi xóa" 
+                              IsChecked="True" 
+                              FontSize="13" FontWeight="SemiBold" Foreground="#15803D"
+                              VerticalContentAlignment="Center" Cursor="Hand"/>
+                </Border>
+
+                <!-- Thông báo lỗi (khi nhập sai) -->
+                <Border x:Name="borderLoi" Background="#FEE2E2" CornerRadius="6" Padding="10,6" Margin="0,0,0,12" Visibility="Collapsed">
+                    <TextBlock x:Name="lblThongBaoLoi" Text="Tài khoản hoặc mật khẩu không chính xác!" 
+                               Foreground="#DC2626" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                </Border>
+
+                <!-- Các nút hành động -->
+                <Grid Margin="0,4,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Button x:Name="btnHuy" Grid.Column="0" Style="{StaticResource ModernButton}" 
+                            Content="HỦY BỎ" Height="40"
+                            Background="#F1F5F9" Foreground="#64748B" FontSize="13" FontWeight="SemiBold"
+                            IsCancel="True" Margin="0,0,6,0"
+                            Click="BtnHuy_Click"/>
+
+                    <Button x:Name="btnXacNhan" Grid.Column="1" Style="{StaticResource ModernButton}" 
+                            Content="XÁC NHẬN XÓA" Height="40"
+                            Background="#DC2626" Foreground="White" FontSize="13" FontWeight="Bold"
+                            IsDefault="True" Margin="6,0,0,0"
+                            Click="BtnXacNhan_Click"/>
+                </Grid>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

@@ -12,15 +12,31 @@ public class TaiKhoanModel
 
 public class AuthService
 {
-    private static readonly string FilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "taikhoan.json");
+    public static string GetFilePath()
+    {
+        string baseFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "taikhoan.json");
+        if (File.Exists(baseFile))
+        {
+            return baseFile;
+        }
+
+        string projectPath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "taikhoan.json"));
+        if (File.Exists(projectPath))
+        {
+            return projectPath;
+        }
+
+        return baseFile;
+    }
 
     public static TaiKhoanModel LayThongTinTaiKhoan()
     {
         try
         {
-            if (File.Exists(FilePath))
+            string path = GetFilePath();
+            if (File.Exists(path))
             {
-                string json = File.ReadAllText(FilePath);
+                string json = File.ReadAllText(path);
                 var model = JsonSerializer.Deserialize<TaiKhoanModel>(json);
                 if (model != null && !string.IsNullOrWhiteSpace(model.TaiKhoan))
                 {
@@ -45,7 +61,14 @@ public class AuthService
         {
             var options = new JsonSerializerOptions { WriteIndented = true };
             string json = JsonSerializer.Serialize(acc, options);
-            File.WriteAllText(FilePath, json);
+            string path = GetFilePath();
+            File.WriteAllText(path, json);
+
+            string baseFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "taikhoan.json");
+            if (!string.Equals(path, baseFile, StringComparison.OrdinalIgnoreCase))
+            {
+                File.WriteAllText(baseFile, json);
+            }
         }
         catch
         {

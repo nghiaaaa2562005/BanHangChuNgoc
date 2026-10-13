@@ -1,0 +1,33 @@
+========================================================================
+     HƯỚNG DẪN SỬ DỤNG & ĐỔI MẬT KHẨU - PHẦN MỀM BÁN HÀNG CHÚ NGỌC
+========================================================================
+
+1. CÁCH KHỞI CHẠY PHẦN MỀM:
+   - Cách 1: Bấm đúp chuột vào file "BanHangChuNgoc.exe" để mở trực tiếp.
+   - Cách 2: Bấm đúp chuột vào file "Tao_Shortcut_Ra_Desktop.bat", hệ thống sẽ
+     tự động tạo 1 biểu tượng "Phần Mềm Bán Hàng - Chú Ngọc" ra ngoài màn hình 
+     Desktop. Sau đó bạn chỉ cần bấm icon ngoài Desktop để dùng mỗi ngày.
+
+2. CÁCH THAY ĐỔI TÀI KHOẢN & MẬT KHẨU:
+   - Trong thư mục phần mềm có sẵn file "taikhoan.json".
+   - Bạn chỉ cần bấm chuột phải vào file "taikhoan.json" -> Chọn "Open with" -> "Notepad".
+   - Bạn sẽ thấy nội dung như sau:
+     {
+       "TaiKhoan": "NgocMai",
+       "MatKhau": "NgocMai"
+     }
+   - Thay đổi tên đăng nhập hoặc mật khẩu theo ý bạn (giữ nguyên dấu ngoặc kép ""),
+     ví dụ:
+     {
+       "TaiKhoan": "admin",
+       "MatKhau": "123456"
+     }
+   - Bấm Ctrl + S để lưu lại file Notepad -> Xong! Lần tới mở app, bạn chỉ cần nhập
+     tài khoản và mật khẩu mới vừa đổi.
+
+3. DỮ LIỆU BÁN HÀNG (CƠ SỞ DỮ LIỆU SQLITE):
+   - Toàn bộ dữ liệu các bao hàng, số áo bán lẻ, lịch sử bán lẻ được lưu tại file:
+     "BanHangChuNgoc.db" (nằm ngay trong thư mục này).
+   - Khi muốn sao lưu dữ liệu dự phòng, bạn chỉ cần copy file "BanHangChuNgoc.db"
+     cất vào USB hoặc Google Drive.
+========================================================================

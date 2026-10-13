@@ -80,7 +80,7 @@
                                     <RowDefinition Height="*"/>
                                 </Grid.RowDefinitions>
 
-                                <TextBlock Grid.Row="0" Text="📋 DANH SÁCH BAO HÀNG" FontSize="14" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,10"/>
+                                <TextBlock Grid.Row="0" Text="📋 DANH SÁCH BAO HÀNG (ĐANG BÁN)" FontSize="14" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,10"/>
 
                                 <ListBox Grid.Row="1" 
                                          ItemsSource="{Binding DanhSachBaoHang}" 
@@ -230,20 +230,6 @@
                                             </ProgressBar.Style>
                                         </ProgressBar>
 
-                                        <!-- Dòng thông điệp trạng thái -->
-                                        <TextBlock Text="{Binding CurrentThongBaoTrangThaiHoaVon}" FontSize="13" FontWeight="SemiBold">
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="Foreground" Value="#92400E"/>
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding CurrentDaHoaVon}" Value="True">
-                                                            <Setter Property="Foreground" Value="#166534"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </TextBlock.Style>
-                                        </TextBlock>
-
                                         <!-- DÒNG LÃI HƠN BAO NHIÊU HOẶC THIẾU BAO NHIÊU -->
                                         <Border CornerRadius="6" Padding="10,6" Margin="0,8,0,0">
                                             <Border.Style>
@@ -327,7 +313,7 @@
                                         <Button Style="{StaticResource ModernButton}" 
                                                 Height="38"
                                                 Command="{Binding ThemBanLeCommand}"
-                                                Content="✓ BÁN ÁO NÀY (ENTER)" 
+                                                Content="ENTER" 
                                                 Background="#059669" Foreground="White" FontSize="14"/>
                                     </StackPanel>
                                 </Grid>
@@ -447,10 +433,9 @@
                                     </DockPanel>
                                 </Border>
 
-                                <Separator Margin="0,8,0,12"/>
+                                <Separator Margin="0,8,0,8"/>
 
-                                <TextBlock Text="LÃI HƠN VỐN / THIẾU VỐN:" FontSize="12" FontWeight="Bold" Foreground="#475569" HorizontalAlignment="Center"/>
-                                <TextBlock FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,6,0,0">
+                                <TextBlock FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,4,0,0">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="Text" Value="{Binding CurrentTienLaiHonVon, StringFormat='+{0:N0} k'}"/>
@@ -477,6 +462,7 @@
                         <RowDefinition Height="Auto"/> <!-- Bộ lọc -->
                         <RowDefinition Height="Auto"/> <!-- 4 Thẻ KPI -->
                         <RowDefinition Height="*"/>    <!-- Bảng dữ liệu thống kê -->
+                        <RowDefinition Height="Auto"/> <!-- Footer thanh tác vụ -->
                     </Grid.RowDefinitions>
 
                     <!-- Bộ lọc theo Tháng và Năm -->
@@ -485,9 +471,13 @@
                             <DropShadowEffect BlurRadius="10" ShadowDepth="1" Opacity="0.08"/>
                         </Border.Effect>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="Tháng:" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <ComboBox ItemsSource="{Binding DanhSachThang}" SelectedItem="{Binding SelectedThang}" 
-                                      Width="120" Height="34" VerticalContentAlignment="Center" Margin="0,0,14,0"/>
+                            <TextBlock Text="Từ tháng:" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <ComboBox ItemsSource="{Binding DanhSachThang}" SelectedItem="{Binding SelectedTuThang}" 
+                                      Width="110" Height="34" VerticalContentAlignment="Center" Margin="0,0,14,0"/>
+
+                            <TextBlock Text="Đến tháng:" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <ComboBox ItemsSource="{Binding DanhSachThang}" SelectedItem="{Binding SelectedDenThang}" 
+                                      Width="110" Height="34" VerticalContentAlignment="Center" Margin="0,0,14,0"/>
 
                             <TextBlock Text="Năm:" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <ComboBox ItemsSource="{Binding DanhSachNam}" 
@@ -522,6 +512,7 @@
                                 <TextBlock Text="TỔNG VỐN BỎ RA" FontSize="11" FontWeight="Bold" Foreground="#64748B"/>
                                 <TextBlock Text="{Binding TongBaoCaoTienNhap, Converter={StaticResource CurrencyConverter}}" 
                                            FontSize="20" FontWeight="Bold" Foreground="#DC2626" Margin="0,4,0,0"/>
+                                <TextBlock Text="(Chỉ tính bao đang bán)" FontSize="11" Foreground="#64748B" Margin="0,2,0,0"/>
                             </StackPanel>
                         </Border>
 
@@ -634,6 +625,28 @@
                                 </DataGrid.Columns>
                             </DataGrid>
                         </Grid>
+                    </Border>
+
+                    <!-- FOOTER TÁC VỤ BÁO CÁO -->
+                    <Border Grid.Row="3" Background="White" CornerRadius="10" Padding="16,10" Margin="0,10,0,0">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="10" ShadowDepth="1" Opacity="0.08"/>
+                        </Border.Effect>
+                        <DockPanel LastChildFill="False">
+                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                                <TextBlock Text="Tổng cộng:" FontSize="13" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding DanhSachThongKe.Count, StringFormat='{} {0} bao hàng'}" 
+                                           FontSize="13" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                                <Button Style="{StaticResource ModernButton}" Command="{Binding XuatExcelCommand}"
+                                        Content="📥 XUẤT FILE EXCEL" Background="#16A34A" Foreground="White" Margin="0,0,10,0"/>
+
+                                <Button Style="{StaticResource ModernButton}" Command="{Binding XoaDuLieuDaLocCommand}"
+                                        Content="🗑️ XÓA DỮ LIỆU ĐÃ LỌC" Background="#DC2626" Foreground="White"/>
+                            </StackPanel>
+                        </DockPanel>
                     </Border>
                 </Grid>
             </TabItem>
